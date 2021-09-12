@@ -13,12 +13,12 @@ namespace Vehicles.API.Helpers
 
         UserViewModel ToUserViewModel(User user);
 
-        //Task<Vehicle> ToVehicleAsync(VehicleViewModel model, bool isNew);
+        Task<Vehicle> ToVehicleAsync(VehicleViewModel model, bool isNew);
 
-        //VehicleViewModel ToVehicleViewModel(Vehicle vehicle);
+        VehicleViewModel ToVehicleViewModel(Vehicle vehicle);
 
-        //Task<Detail> ToDetailAsync(DetailViewModel model, bool isNew);
+        Task<Detail> ToDetailAsync(DetailViewModel model, bool isNew);
 
-        //DetailViewModel ToDetailViewModel(Detail detail);
+        DetailViewModel ToDetailViewModel(Detail detail);
     }
 }
