@@ -48,7 +48,8 @@ namespace Vehicles.API.Data.Entities
         [Display(Name = "Usuario")]
         public string FullName => $"{FirstName} {LastName}";
 
-        //public ICollection<Vehicle> Vehicles { get; set; }
+        public ICollection<Vehicle> Vehicles { get; set; }
+
 
         //[Display(Name = "# Vehículos")]
         //public int VehiclesCount => Vehicles == null ? 0 : Vehicles.Count;
