@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 namespace Vehicles.API.Data.Entities
 {
@@ -10,6 +8,7 @@ namespace Vehicles.API.Data.Entities
     {
         public int Id { get; set; }
 
+        [JsonIgnore]
         [Required(ErrorMessage = "El campo {0} es obligatorio.")]
         public Vehicle Vehicle { get; set; }
 

@@ -12,12 +12,9 @@ namespace Vehicles.API.Data.Entities
         public int Id { get; set; }
 
         [Display(Name = "Vehículo")]
+        [JsonIgnore]
         [Required(ErrorMessage = "El campo {0} es obligatorio.")]
         public Vehicle Vehicle { get; set; }
-
-        //[Display(Name = "Mecánico")]
-        //[Required(ErrorMessage = "El campo {0} es obligatorio.")]
-        
 
         [Display(Name = "Fecha")]
         [DisplayFormat(DataFormatString = "{0:yyyy/MM/dd hh:mm tt}")]
