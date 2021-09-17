@@ -37,7 +37,6 @@ namespace Vehicles.API
                 x.Tokens.AuthenticatorTokenProvider = TokenOptions.DefaultAuthenticatorProvider;
                 x.SignIn.RequireConfirmedEmail = true;
                 x.User.RequireUniqueEmail = true;
-                x.User.RequireUniqueEmail = true;
                 x.Password.RequireDigit = false;
                 x.Password.RequiredUniqueChars = 0;
                 x.Password.RequireLowercase = false;
