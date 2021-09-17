@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -10,8 +11,10 @@ using Vehicles.API.Data.Entities;
 
 namespace Vehicles.API.Controllers
 {
-    [Authorize(Roles = "Admin")]
-    public class ProceduresController : Controller
+    [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Route("api/[controller]")]
+    public class ProceduresController : ControllerBase
     {
         private readonly DataContext _context;
 
@@ -20,109 +23,88 @@ namespace Vehicles.API.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Procedure>>> GetProcedures()
         {
-            return View(await _context.Procedures.ToListAsync());
+            return await _context.Procedures.OrderBy(x => x.Description).ToListAsync();
         }
 
-        public IActionResult Create()
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Procedure>> GetProcedure(int id)
         {
-            return View();
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Procedure procedure)
-        {
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Add(procedure);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (DbUpdateException dbUpdateException)
-                {
-                    if (dbUpdateException.InnerException.Message.Contains("duplicate"))
-                    {
-                        ModelState.AddModelError(string.Empty, "Ya existe este procedimiento.");
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    ModelState.AddModelError(string.Empty, exception.Message);
-                }
-            }
-
-            return View(procedure);
-        }
-
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             Procedure procedure = await _context.Procedures.FindAsync(id);
+
             if (procedure == null)
             {
                 return NotFound();
             }
 
-            return View(procedure);
+            return procedure;
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Procedure procedure)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutProcedure(int id, Procedure procedure)
         {
             if (id != procedure.Id)
             {
-                return NotFound();
+                return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            _context.Entry(procedure).State = EntityState.Modified;
+
+            try
             {
-                try
+                await _context.SaveChangesAsync();
+                return NoContent();
+            }
+            catch (DbUpdateException dbUpdateException)
+            {
+                if (dbUpdateException.InnerException.Message.Contains("duplicate"))
                 {
-                    _context.Update(procedure);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
+                    return BadRequest("Ya existe este procedimiento.");
                 }
-                catch (DbUpdateException dbUpdateException)
+                else
                 {
-                    if (dbUpdateException.InnerException.Message.Contains("duplicate"))
-                    {
-                        ModelState.AddModelError(string.Empty, "Ya existe este procedimiento.");
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    ModelState.AddModelError(string.Empty, exception.Message);
+                    return BadRequest(dbUpdateException.InnerException.Message);
                 }
             }
-            return View(procedure);
+            catch (Exception exception)
+            {
+                return BadRequest(exception.Message);
+            }
         }
 
-        public async Task<IActionResult> Delete(int? id)
+        [HttpPost]
+        public async Task<ActionResult<Procedure>> PostProcedure(Procedure procedure)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            _context.Procedures.Add(procedure);
 
-            Procedure procedure = await _context.Procedures
-                .FirstOrDefaultAsync(m => m.Id == id);
+            try
+            {
+                await _context.SaveChangesAsync();
+                return CreatedAtAction("GetProcedure", new { id = procedure.Id }, procedure);
+            }
+            catch (DbUpdateException dbUpdateException)
+            {
+                if (dbUpdateException.InnerException.Message.Contains("duplicate"))
+                {
+                    return BadRequest("Ya existe este procedimiento.");
+                }
+                else
+                {
+                    return BadRequest(dbUpdateException.InnerException.Message);
+                }
+            }
+            catch (Exception exception)
+            {
+                return BadRequest(exception.Message);
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProcedure(int id)
+        {
+            Procedure procedure = await _context.Procedures.FindAsync(id);
             if (procedure == null)
             {
                 return NotFound();
@@ -130,7 +112,8 @@ namespace Vehicles.API.Controllers
 
             _context.Procedures.Remove(procedure);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return NoContent();
         }
     }
 }
