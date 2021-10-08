@@ -1,20 +1,15 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Vehicles.API.Data;
 using Vehicles.API.Data.Entities;
 
 namespace Vehicles.API.Controllers
 {
-    [ApiController]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Route("api/[controller]")]
-    public class BrandsController : ControllerBase
+    [Authorize(Roles = "Admin")]
+    public class BrandsController : Controller
     {
         private readonly DataContext _context;
 
@@ -23,88 +18,109 @@ namespace Vehicles.API.Controllers
             _context = context;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Brand>>> GetBrands()
+        public async Task<IActionResult> Index()
         {
-            return await _context.Brands.OrderBy(x => x.Description).ToListAsync();
+            return View(await _context.Brands.ToListAsync());
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Brand>> GetBrand(int id)
+        public IActionResult Create()
         {
-            Brand brand = await _context.Brands.FindAsync(id);
+            return View();
+        }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(Brand brand)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Add(brand);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateException dbUpdateException)
+                {
+                    if (dbUpdateException.InnerException.Message.Contains("duplicate"))
+                    {
+                        ModelState.AddModelError(string.Empty, "Ya existe este tipo de documento.");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    ModelState.AddModelError(string.Empty, exception.Message);
+                }
+            }
+
+            return View(brand);
+        }
+
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            Brand brand = await _context.Brands.FindAsync(id);
             if (brand == null)
             {
                 return NotFound();
             }
 
-            return brand;
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutBrand(int id, Brand brand)
-        {
-            if (id != brand.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(brand).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-                return NoContent();
-            }
-            catch (DbUpdateException dbUpdateException)
-            {
-                if (dbUpdateException.InnerException.Message.Contains("duplicate"))
-                {
-                    return BadRequest("Ya existe esta marca.");
-                }
-                else
-                {
-                    return BadRequest(dbUpdateException.InnerException.Message);
-                }
-            }
-            catch (Exception exception)
-            {
-                return BadRequest(exception.Message);
-            }
+            return View(brand);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Brand>> PostBrand(Brand brand)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Brand brand)
         {
-            _context.Brands.Add(brand);
+            if (id != brand.Id)
+            {
+                return NotFound();
+            }
 
-            try
+            if (ModelState.IsValid)
             {
-                await _context.SaveChangesAsync();
-                return CreatedAtAction("GetBrand", new { id = brand.Id }, brand);
-            }
-            catch (DbUpdateException dbUpdateException)
-            {
-                if (dbUpdateException.InnerException.Message.Contains("duplicate"))
+                try
                 {
-                    return BadRequest("Ya existe esta marca.");
+                    _context.Update(brand);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
-                else
+                catch (DbUpdateException dbUpdateException)
                 {
-                    return BadRequest(dbUpdateException.InnerException.Message);
+                    if (dbUpdateException.InnerException.Message.Contains("duplicate"))
+                    {
+                        ModelState.AddModelError(string.Empty, "Ya existe este tipo de documento.");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    ModelState.AddModelError(string.Empty, exception.Message);
                 }
             }
-            catch (Exception exception)
-            {
-                return BadRequest(exception.Message);
-            }
+            return View(brand);
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteBrand(int id)
+        public async Task<IActionResult> Delete(int? id)
         {
-            Brand brand = await _context.Brands.FindAsync(id);
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            Brand brand = await _context.Brands
+                .FirstOrDefaultAsync(m => m.Id == id);
             if (brand == null)
             {
                 return NotFound();
@@ -112,132 +128,7 @@ namespace Vehicles.API.Controllers
 
             _context.Brands.Remove(brand);
             await _context.SaveChangesAsync();
-
-            return NoContent();
+            return RedirectToAction(nameof(Index));
         }
     }
 }
-//    [Authorize(Roles = "Admin")]
-//    public class BrandsController : Controller
-//    {
-//         private readonly DataContext _context;
-
-//        public BrandsController(DataContext context)
-//        {
-//            _context = context;
-//        }
-
-//        public async Task<IActionResult> Index()
-//        {
-//            return View(await _context.Brands.ToListAsync());
-//        }
-
-//        public IActionResult Create()
-//        {
-//            return View();
-//        }
-
-//        [HttpPost]
-//        [ValidateAntiForgeryToken]
-//        public async Task<IActionResult> Create(Brand brand)
-//        {
-//            if (ModelState.IsValid)
-//            {
-//                try
-//                {
-//                    _context.Add(brand);
-//                    await _context.SaveChangesAsync();
-//                    return RedirectToAction(nameof(Index));
-//                }
-//                catch (DbUpdateException dbUpdateException)
-//                {
-//                    if (dbUpdateException.InnerException.Message.Contains("duplicate"))
-//                    {
-//                        ModelState.AddModelError(string.Empty, "Ya existe este tipo de documento.");
-//                    }
-//                    else
-//                    {
-//                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
-//                    }
-//                }
-//                catch (Exception exception)
-//                {
-//                    ModelState.AddModelError(string.Empty, exception.Message);
-//                }
-//            }
-
-//            return View(brand);
-//        }
-
-//        public async Task<IActionResult> Edit(int? id)
-//        {
-//            if (id == null)
-//            {
-//                return NotFound();
-//            }
-
-//            Brand brand = await _context.Brands.FindAsync(id);
-//            if (brand == null)
-//            {
-//                return NotFound();
-//            }
-
-//            return View(brand);
-//        }
-
-//        [HttpPost]
-//        [ValidateAntiForgeryToken]
-//        public async Task<IActionResult> Edit(int id, Brand brand)
-//        {
-//            if (id != brand.Id)
-//            {
-//                return NotFound();
-//            }
-
-//            if (ModelState.IsValid)
-//            {
-//                try
-//                {
-//                    _context.Update(brand);
-//                    await _context.SaveChangesAsync();
-//                    return RedirectToAction(nameof(Index));
-//                }
-//                catch (DbUpdateException dbUpdateException)
-//                {
-//                    if (dbUpdateException.InnerException.Message.Contains("duplicate"))
-//                    {
-//                        ModelState.AddModelError(string.Empty, "Ya existe este tipo de documento.");
-//                    }
-//                    else
-//                    {
-//                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
-//                    }
-//                }
-//                catch (Exception exception)
-//                {
-//                    ModelState.AddModelError(string.Empty, exception.Message);
-//                }
-//            }
-//            return View(brand);
-//        }
-
-//        public async Task<IActionResult> Delete(int? id)
-//        {
-//            if (id == null)
-//            {
-//                return NotFound();
-//            }
-
-//            Brand brand = await _context.Brands
-//                .FirstOrDefaultAsync(m => m.Id == id);
-//            if (brand == null)
-//            {
-//                return NotFound();
-//            }
-
-//            _context.Brands.Remove(brand);
-//            await _context.SaveChangesAsync();
-//            return RedirectToAction(nameof(Index));
-//        }
-//    }
-//}

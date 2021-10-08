@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 using Vehicles.API.Data.Entities;
 using Vehicles.Common.Enums;
 
@@ -58,10 +56,9 @@ namespace Vehicles.API.Models
 
         public IEnumerable<SelectListItem> DocumentTypes { get; set; }
 
-        //TODO: Fix the images path
         [Display(Name = "Foto")]
         public string ImageFullPath => ImageId == Guid.Empty
-            ? $"https://localhost:44318/images/noimage.png"
-            : $"https://vehiclessoto.blob.core.windows.net/users/{ImageId}";
+            ? $"https://vehicleszulu.azurewebsites.net/images/noimage.png"
+            : $"https://vehicleszulu.blob.core.windows.net/users/{ImageId}";
     }
 }
